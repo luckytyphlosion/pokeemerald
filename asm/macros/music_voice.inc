@@ -139,13 +139,37 @@
 	.4byte 0
 	.endm
 
+	@ see: https://sourceware.org/binutils/docs-2.35/as/Sub_002dSections.html
+	enum_start
+	enum __subsection_id_cry1
+	enum __subsection_id_cry2
+
+	.macro cry_table_start label_1:req, label_2:req
+
+	.subsection __subsection_id_cry1
+\label_1\():
+	.global \label_1
+
+	.subsection __subsection_id_cry2
+\label_2\():
+	.global \label_2
+	
+	.endm
+
 	.macro cry sample:req
+	.subsection __subsection_id_cry1
+	__cry1 \sample
+	.subsection __subsection_id_cry2
+	__cry2 \sample
+	.endm
+
+	.macro __cry1 sample:req
 	.byte 0x20, 60, 0, 0
 	.4byte \sample
 	.byte 0xff, 0, 0xff, 0
 	.endm
 
-	.macro cry2 sample:req
+	.macro __cry2 sample:req
 	.byte 0x30, 60, 0, 0
 	.4byte \sample
 	.byte 0xff, 0, 0xff, 0

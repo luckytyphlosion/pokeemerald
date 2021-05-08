@@ -81,6 +81,12 @@ enum {
     PALTAG_EXPLOSION,
     PALTAG_DIG_DISPLAY,
     PALTAG_PIKA_AURA,
+    PALTAG_REEL2,
+    PALTAG_REEL3,
+    PALTAG_REEL4,
+    PALTAG_REEL5,
+    PALTAG_REEL6,
+    PALTAG_REEL7,
 };
 
 enum {
@@ -617,6 +623,7 @@ static const struct SubspriteTable sSubspriteTable_ReelTimeMachineAntennae[];
 static const struct SubspriteTable sSubspriteTable_ReelTimeMachine[];
 static const struct SubspriteTable sSubspriteTable_ReelBackground[];
 
+static const struct SpriteTemplate * const sReelSymbolSpriteTemplatePtrs[];
 static const struct BgTemplate sBgTemplates[] =
 {
     {
@@ -3588,15 +3595,19 @@ static void CreateReelSymbolSprites(void)
     s16 i;
     s16 j;
     s16 x;
+    u32 k;
+
     for (i = 0, x = 0x30; i < 3; i++, x += 0x28)
     {
+        k = 0;
         for (j = 0; j < 120; j += 24)
         {
-            struct Sprite *sprite = gSprites + CreateSprite(&sSpriteTemplate_ReelSymbol, x, 0, 14);
+            struct Sprite *sprite = gSprites + CreateSprite(sReelSymbolSpriteTemplatePtrs[k], x, 0, 14);
             sprite->oam.priority = 3;
             sprite->data[0] = i;
             sprite->data[1] = j;
             sprite->data[3] = -1;
+            k++;
         }
     }
 }
@@ -5508,7 +5519,7 @@ static const union AffineAnimCmd *const sAffineAnims_PikaPowerBolt[] =
     sAffineAnim_PikaPowerBolt
 };
 
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol =
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol1 =
 {
     .tileTag = GFXTAG_SYMBOLS_START, 
     .paletteTag = PALTAG_REEL, 
@@ -5517,6 +5528,77 @@ static const struct SpriteTemplate sSpriteTemplate_ReelSymbol =
     .images = NULL, 
     .affineAnims = gDummySpriteAffineAnimTable, 
     .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol2 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL2, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol3 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL3, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol4 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL4, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol5 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL5, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol6 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL6, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol7 =
+{
+    .tileTag = GFXTAG_SYMBOLS_START, 
+    .paletteTag = PALTAG_REEL7, 
+    .oam = &sOam_32x32, 
+    .anims = sAnims_SingleFrame, 
+    .images = NULL, 
+    .affineAnims = gDummySpriteAffineAnimTable, 
+    .callback = SpriteCB_ReelSymbol
+};
+
+static const struct SpriteTemplate * const sReelSymbolSpriteTemplatePtrs[] =
+{
+    &sSpriteTemplate_ReelSymbol1,
+    &sSpriteTemplate_ReelSymbol2,
+    &sSpriteTemplate_ReelSymbol3,
+    &sSpriteTemplate_ReelSymbol4,
+    &sSpriteTemplate_ReelSymbol5,
+    &sSpriteTemplate_ReelSymbol6,
+    &sSpriteTemplate_ReelSymbol7
 };
 
 static const struct SpriteTemplate sSpriteTemplate_CoinNumber =
@@ -7194,6 +7276,12 @@ static const struct SpritePalette sSlotMachineSpritePalettes[] =
     { .data = gSlotMachineReelTimeExplosion_Pal, .tag = PALTAG_EXPLOSION},
     { .data = gSlotMachineDigitalDisplay_Pal,    .tag = PALTAG_DIG_DISPLAY},
     { .data = gSlotMachineMisc_Pal,              .tag = PALTAG_PIKA_AURA},
+    { .data = gSlotMachineReelSymbols_Pal2,      .tag = PALTAG_REEL2},
+    { .data = gSlotMachineReelSymbols_Pal3,      .tag = PALTAG_REEL3},
+    { .data = gSlotMachineReelSymbols_Pal4,      .tag = PALTAG_REEL4},
+    { .data = gSlotMachineReelSymbols_Pal5,      .tag = PALTAG_REEL5},
+    { .data = gSlotMachineReelSymbols_Pal6,      .tag = PALTAG_REEL6},
+    { .data = gSlotMachineReelSymbols_Pal7,      .tag = PALTAG_REEL7},
     {}
 };
 

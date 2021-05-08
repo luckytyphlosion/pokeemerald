@@ -556,6 +556,7 @@ static EWRAM_DATA struct SpriteFrameImage *sImageTable_DigitalDisplay_DPad = NUL
 static EWRAM_DATA struct SpriteSheet *sReelBackgroundSpriteSheet = NULL;
 static EWRAM_DATA struct SpriteSheet *sSlotMachineSpritesheetsPtr = NULL;
 static EWRAM_DATA struct SlotMachine *sSlotMachine = NULL;
+static EWRAM_DATA struct SpriteTemplate *sReelSymbolSpriteTemplates = NULL;
 
 // IWRAM bss
 static struct SpriteFrameImage *sImageTables_DigitalDisplay[NUM_DIG_DISPLAY_SPRITES];
@@ -872,8 +873,15 @@ static void (*const sDigitalDisplayActions[])(struct Task *task) =
     DigitalDisplay_Idle,
 };
 
-
-
+static const u8 sReelGfxTagToPalTag[] = {
+    [GFXTAG_7_RED] = PALTAG_REEL,
+    [GFXTAG_7_BLUE] = PALTAG_REEL2,
+    [GFXTAG_AZURILL] = PALTAG_REEL3,
+    [GFXTAG_LOTAD] = PALTAG_REEL4,
+    [GFXTAG_CHERRY] = PALTAG_REEL5,
+    [GFXTAG_POWER] = PALTAG_REEL6,
+    [GFXTAG_REPLAY] = PALTAG_REEL7
+};
 
 // code
 #define tState data[0]
@@ -1643,6 +1651,7 @@ static bool8 SlotAction_FreeDataStructures(struct Task *task)
         FREE_AND_SET_NULL(sReelBackgroundSpriteSheet);
         FREE_AND_SET_NULL(sSlotMachineSpritesheetsPtr);
         FREE_AND_SET_NULL(sSlotMachine);
+        FREE_AND_SET_NULL(sReelSymbolSpriteTemplates);
     }
     return FALSE;
 }
@@ -3597,12 +3606,21 @@ static void CreateReelSymbolSprites(void)
     s16 x;
     u32 k;
 
+    sReelSymbolSpriteTemplates = Alloc(sizeof(struct SpriteTemplate) * 15);
+    for (i = 0; i < NUM_REELS; i++) {
+        for (j = 0; j < 5; j++) {
+            sReelSymbolSpriteTemplates[i * 5 + j] = sSpriteTemplate_ReelSymbol;
+            sReelSymbolSpriteTemplates[i * 5 + j].paletteTag = sReelGfxTagToPalTag[GetTagAtRest(i, j)];
+        }
+    }
+
+    k = 0;
+
     for (i = 0, x = 0x30; i < 3; i++, x += 0x28)
     {
-        k = 0;
         for (j = 0; j < 120; j += 24)
         {
-            struct Sprite *sprite = gSprites + CreateSprite(sReelSymbolSpriteTemplatePtrs[k], x, 0, 14);
+            struct Sprite *sprite = gSprites + CreateSprite(&sReelSymbolSpriteTemplates[k], x, 0, 14);
             sprite->oam.priority = 3;
             sprite->data[0] = i;
             sprite->data[1] = j;
@@ -3614,11 +3632,15 @@ static void CreateReelSymbolSprites(void)
 
 static void SpriteCB_ReelSymbol(struct Sprite *sprite)
 {
+    u16 gfxTag;
+
     sprite->data[2] = sSlotMachine->reelPixelOffsets[sprite->data[0]] + sprite->data[1];
     sprite->data[2] %= 120;
     sprite->pos1.y = sSlotMachine->reelPixelOffsetsWhileStopping[sprite->data[0]] + 28 + sprite->data[2];
-    sprite->sheetTileStart = GetSpriteTileStartByTag(GetTagAtRest(sprite->data[0], sprite->data[2] / 24));
+    gfxTag = GetTagAtRest(sprite->data[0], sprite->data[2] / 24);
+    sprite->sheetTileStart = GetSpriteTileStartByTag(gfxTag);
     SetSpriteSheetFrameTileNum(sprite);
+    sprite->oam.paletteNum = IndexOfSpritePaletteTag(sReelGfxTagToPalTag[gfxTag]);
 }
 
 static void CreateCreditPayoutNumberSprites(void)
@@ -5519,7 +5541,7 @@ static const union AffineAnimCmd *const sAffineAnims_PikaPowerBolt[] =
     sAffineAnim_PikaPowerBolt
 };
 
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol1 =
+static const struct SpriteTemplate sSpriteTemplate_ReelSymbol =
 {
     .tileTag = GFXTAG_SYMBOLS_START, 
     .paletteTag = PALTAG_REEL, 
@@ -5528,77 +5550,6 @@ static const struct SpriteTemplate sSpriteTemplate_ReelSymbol1 =
     .images = NULL, 
     .affineAnims = gDummySpriteAffineAnimTable, 
     .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol2 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL2, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol3 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL3, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol4 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL4, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol5 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL5, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol6 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL6, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-static const struct SpriteTemplate sSpriteTemplate_ReelSymbol7 =
-{
-    .tileTag = GFXTAG_SYMBOLS_START, 
-    .paletteTag = PALTAG_REEL7, 
-    .oam = &sOam_32x32, 
-    .anims = sAnims_SingleFrame, 
-    .images = NULL, 
-    .affineAnims = gDummySpriteAffineAnimTable, 
-    .callback = SpriteCB_ReelSymbol
-};
-
-static const struct SpriteTemplate * const sReelSymbolSpriteTemplatePtrs[] =
-{
-    &sSpriteTemplate_ReelSymbol1,
-    &sSpriteTemplate_ReelSymbol2,
-    &sSpriteTemplate_ReelSymbol3,
-    &sSpriteTemplate_ReelSymbol4,
-    &sSpriteTemplate_ReelSymbol5,
-    &sSpriteTemplate_ReelSymbol6,
-    &sSpriteTemplate_ReelSymbol7
 };
 
 static const struct SpriteTemplate sSpriteTemplate_CoinNumber =

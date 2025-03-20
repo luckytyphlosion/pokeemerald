@@ -376,13 +376,15 @@ bool32 AddTextPrinter(struct TextPrinterTemplate *printerTemplate, u8 speed, voi
     return TRUE;
 }
 
+static void RunTextPrintersForInstantText(void);
+
 void RunTextPrinters(void)
 {
-    int i;
+    //int i;
 
     if (!gDisableTextPrinters)
     {
-        for (i = 0; i < WINDOWS_MAX; ++i)
+        /*for (i = 0; i < WINDOWS_MAX; ++i)
         {
             if (sTextPrinters[i].active)
             {
@@ -400,7 +402,53 @@ void RunTextPrinters(void)
                     break;
                 }
             }
-        }
+        }*/
+        RunTextPrintersForInstantText();
+    }
+}
+
+static void RunTextPrintersForInstantText(void)
+{
+    int i, j;
+    u16 result;
+
+    for (i = 0; i < 0x20; ++i)
+    {
+        if (sTextPrinters[i].active != 0)
+        {
+            u32 doCopyWindowToVram = FALSE;
+
+            for (j = 0; j < 0x400; j++) {
+                u32 oldState;
+                u32 newState;
+
+                oldState = sTextPrinters[i].state;
+                result = RenderFont(&sTextPrinters[i]);
+                newState = sTextPrinters[i].state;
+
+                if (result == 0) {
+                    doCopyWindowToVram = TRUE;
+                    if (sTextPrinters[i].callback != 0)
+                        sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, result);
+                } else if (result == 3) {
+                    if (sTextPrinters[i].callback != 0)
+                        sTextPrinters[i].callback(&sTextPrinters[i].printerTemplate, result);
+                    if (oldState == 0 && newState != 0)
+                        doCopyWindowToVram = TRUE;
+                        //CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, 2);
+                    break;
+                } else if (result == 1) {
+                    doCopyWindowToVram = TRUE;
+                    CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, 2);
+                    sTextPrinters[i].active = 0;
+                    break;
+                }
+            }
+
+            if (doCopyWindowToVram) {
+                CopyWindowToVram(sTextPrinters[i].printerTemplate.windowId, 2);
+            }
+        }        
     }
 }
 

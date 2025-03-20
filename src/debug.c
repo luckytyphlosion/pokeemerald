@@ -52,6 +52,7 @@
 #include "strings.h"
 #include "string_util.h"
 #include "task.h"
+#include "trainer_see.h"
 #include "pokemon_summary_screen.h"
 #include "wild_encounter.h"
 #include "constants/abilities.h"
@@ -65,6 +66,7 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/species.h"
+#include "constants/opponents.h"
 #include "constants/weather.h"
 #include "save.h"
 
@@ -101,6 +103,8 @@ enum UtilDebugMenu
     DEBUG_UTIL_MENU_ITEM_BERRY_FUNCTIONS,
     DEBUG_UTIL_MENU_ITEM_EWRAM_COUNTERS,
     DEBUG_UTIL_MENU_ITEM_STEVEN_MULTI,
+    DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_SINGLES,
+    DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_DOUBLES
 };
 
 enum GivePCBagDebugMenu
@@ -370,6 +374,8 @@ static void DebugAction_Util_ExpansionVersion(u8 taskId);
 static void DebugAction_Util_BerryFunctions(u8 taskId);
 static void DebugAction_Util_CheckEWRAMCounters(u8 taskId);
 static void DebugAction_Util_Steven_Multi(u8 taskId);
+static void DebugAction_Util_MoveAnimsSingles(u8 taskId);
+static void DebugAction_Util_MoveAnimsDoubles(u8 taskId);
 
 static void DebugAction_OpenPCBagFillMenu(u8 taskId);
 static void DebugAction_PCBag_Fill_PCBoxes_Fast(u8 taskId);
@@ -584,6 +590,8 @@ static const struct ListMenuItem sDebugMenu_Items_Utilities[] =
     [DEBUG_UTIL_MENU_ITEM_BERRY_FUNCTIONS] = {COMPOUND_STRING("Berry Functions…{CLEAR_TO 110}{RIGHT_ARROW}"),  DEBUG_UTIL_MENU_ITEM_BERRY_FUNCTIONS},
     [DEBUG_UTIL_MENU_ITEM_EWRAM_COUNTERS]  = {COMPOUND_STRING("EWRAM Counters…{CLEAR_TO 110}{RIGHT_ARROW}"),   DEBUG_UTIL_MENU_ITEM_EWRAM_COUNTERS},
     [DEBUG_UTIL_MENU_ITEM_STEVEN_MULTI]    = {COMPOUND_STRING("Steven Multi"),                                 DEBUG_UTIL_MENU_ITEM_STEVEN_MULTI},
+    [DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_SINGLES] = {COMPOUND_STRING("Move anims singles")},
+    [DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_DOUBLES] = {COMPOUND_STRING("Move anims doubles")},
 };
 
 static const struct ListMenuItem sDebugMenu_Items_PCBag[] =
@@ -757,6 +765,8 @@ static void (*const sDebugMenu_Actions_Utilities[])(u8) =
     [DEBUG_UTIL_MENU_ITEM_BERRY_FUNCTIONS] = DebugAction_Util_BerryFunctions,
     [DEBUG_UTIL_MENU_ITEM_EWRAM_COUNTERS]  = DebugAction_Util_CheckEWRAMCounters,
     [DEBUG_UTIL_MENU_ITEM_STEVEN_MULTI]    = DebugAction_Util_Steven_Multi,
+    [DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_SINGLES] = DebugAction_Util_MoveAnimsSingles,
+    [DEBUG_UTIL_MENU_ITEM_MOVE_ANIMS_DOUBLES] = DebugAction_Util_MoveAnimsDoubles,
 };
 
 static void (*const sDebugMenu_Actions_PCBag[])(u8) =
@@ -2108,6 +2118,28 @@ static void DebugAction_Util_ExpansionVersion(u8 taskId)
 static void DebugAction_Util_Steven_Multi(u8 taskId)
 {
     Debug_DestroyMenu_Full_Script(taskId, Debug_EventScript_Steven_Multi);
+}
+
+static void DebugAction_Util_MoveAnimsSingles(u8 taskId)
+{
+    gNoOfApproachingTrainers = 1;
+    gDoDebugPlayAllMoveAnims = TRUE;
+    TRAINER_BATTLE_PARAM.opponentA = TRAINER_SAWYER_1;
+    TRAINER_BATTLE_PARAM.opponentB = 0;
+
+    BattleSetup_StartTrainerBattle(TRUE);
+    DebugAction_DestroyExtraWindow(taskId);
+}
+
+static void DebugAction_Util_MoveAnimsDoubles(u8 taskId)
+{
+    gNoOfApproachingTrainers = 2;
+    gDoDebugPlayAllMoveAnims = TRUE;
+    TRAINER_BATTLE_PARAM.opponentA = TRAINER_SAWYER_1;
+    TRAINER_BATTLE_PARAM.opponentB = TRAINER_GRUNT_AQUA_HIDEOUT_1;
+
+    BattleSetup_StartTrainerBattle(TRUE);
+    DebugAction_DestroyExtraWindow(taskId);
 }
 
 void BufferExpansionVersion(struct ScriptContext *ctx)

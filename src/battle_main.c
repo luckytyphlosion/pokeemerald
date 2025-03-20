@@ -235,6 +235,7 @@ EWRAM_DATA bool8 gLastUsedBallMenuPresent = FALSE;
 EWRAM_DATA u8 gPartyCriticalHits[PARTY_SIZE] = {0};
 EWRAM_DATA static u8 sTriedEvolving = 0;
 EWRAM_DATA u8 gCategoryIconSpriteId = 0;
+EWRAM_DATA bool8 gDoDebugPlayAllMoveAnims = FALSE;
 
 COMMON_DATA void (*gPreBattleCallback1)(void) = NULL;
 COMMON_DATA void (*gBattleMainFunc)(void) = NULL;
@@ -3866,6 +3867,12 @@ static void TryDoEventsBeforeFirstTurn(void)
         gBattleStruct->eventsBeforeFirstTurnState++;
         break;
     case FIRST_TURN_EVENTS_END:
+        if (gDoDebugPlayAllMoveAnims) {
+            gDoDebugPlayAllMoveAnims = FALSE;
+            gBattleMainFunc = HandleEndTurn_FinishBattle;
+            BattleScriptExecute(BattleScript_TestAllMoveAnimations);
+            return;
+        }
         for (i = 0; i < MAX_BATTLERS_COUNT; i++)
         {
             gBattleStruct->monToSwitchIntoId[i] = PARTY_SIZE;

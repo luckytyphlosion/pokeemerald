@@ -2399,7 +2399,7 @@ bool8 ScrCmd_dotrainerbattle(struct ScriptContext *ctx)
 {
     Script_RequestEffects(SCREFF_V1 | SCREFF_SAVE | SCREFF_HARDWARE);
 
-    BattleSetup_StartTrainerBattle();
+    BattleSetup_StartTrainerBattle(FALSE);
     return TRUE;
 }
 

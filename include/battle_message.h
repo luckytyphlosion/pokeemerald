@@ -332,4 +332,15 @@ extern const u8 gText_BattleTourney[];
 extern const u16 gMissStringIds[];
 extern const u16 gStatUpStringIds[];
 
+extern const u8 gText_MoveTargetFoesAndAlly[];
+extern const u8 gText_MoveTargetSelected[];
+extern const u8 gText_MoveTargetRandom[];
+extern const u8 gText_MoveTargetOpponent[];
+extern const u8 gText_MoveTargetBoth[];
+extern const u8 gText_MoveTargetUser[];
+extern const u8 gText_MoveTargetOpponentsField[];
+extern const u8 gText_MoveTargetAlly[];
+extern const u8 gText_MoveTargetEveryone[];
+extern const u8 gText_MoveTargetUserOrAlly[];
+
 #endif // GUARD_BATTLE_MESSAGE_H

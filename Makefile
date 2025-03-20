@@ -6,7 +6,7 @@ REVISION    := 0
 KEEP_TEMPS  ?= 0
 
 # `File name`.gba
-FILE_NAME := pokeemerald
+FILE_NAME := pokeemerald-expansion
 BUILD_DIR := build
 
 # Compares the ROM to a checksum of the original - only makes sense using when non-modern
@@ -135,7 +135,7 @@ LIBPATH := -L "$(dir $(shell $(PATH_ARMCC) -mthumb -print-file-name=libgcc.a))" 
 LIB := $(LIBPATH) -lc -lnosys -lgcc -L../../libagbsyscall -lagbsyscall
 # Enable debug info if set
 ifeq ($(DINFO),1)
-  override CFLAGS += -g
+  override CFLAGS += -g -gdwarf-4
 else
   ifeq ($(DEBUG),1)
     override CFLAGS += -g

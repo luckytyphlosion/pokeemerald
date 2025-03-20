@@ -79,7 +79,7 @@ bool8 GetTrainerFlag(void);
 bool8 HasTrainerBeenFought(u16 trainerId);
 void SetTrainerFlag(u16 trainerId);
 void ClearTrainerFlag(u16 trainerId);
-void BattleSetup_StartTrainerBattle(void);
+void BattleSetup_StartTrainerBattle(bool32 fromDebug);
 void BattleSetup_StartRematchBattle(void);
 void ShowTrainerIntroSpeech(void);
 const u8 *BattleSetup_GetScriptAddrAfterBattle(void);

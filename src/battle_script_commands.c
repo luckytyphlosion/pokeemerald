@@ -9860,6 +9860,44 @@ static u32 CalculateBattlerPartyCount(u32 battler)
     return count;
 }
 
+static u32 GetDeterminedMoveTarget(u32 move)
+{
+    u32 determinedMoveTarget;
+
+    switch (move)
+    {
+    case MOVE_COUNTER:
+    case MOVE_MIRROR_COAT:
+    case MOVE_METAL_BURST:
+    case MOVE_COMEUPPANCE:
+        determinedMoveTarget = MOVE_TARGET_RANDOM;
+        break;
+    case MOVE_METRONOME:
+    case MOVE_SLEEP_TALK:
+    case MOVE_ASSIST:
+    case MOVE_MAGIC_COAT:
+    case MOVE_SNATCH:
+    case MOVE_COPYCAT:
+        determinedMoveTarget = MOVE_TARGET_USER;
+        break;
+    case MOVE_ME_FIRST:
+        determinedMoveTarget = MOVE_TARGET_BOTH;
+        break;
+    default:
+        determinedMoveTarget = gMovesInfo[move].target;
+        break;
+    }
+
+    switch (determinedMoveTarget)
+    {
+    case MOVE_TARGET_FOES_AND_ALLY:
+        determinedMoveTarget = MOVE_TARGET_SELECTED;
+        break;
+    }
+
+    return determinedMoveTarget;
+}
+
 static void Cmd_various(void)
 {
     CMD_ARGS(u8 battler, u8 id);
@@ -11617,6 +11655,448 @@ static void Cmd_various(void)
         VARIOUS_ARGS();
         gBattleMons[battler].item = gLastUsedItem;
         break;
+    }
+    case VARIOUS_DEBUG_PLAY_MOVE_ANIMATION:
+    {
+        BtlController_EmitMoveAnimation(0, BUFFER_A, gCurrentMove, gBattleScripting.animTurn, gBattleMovePower, gBattleStruct->moveDamage[0], gAnimFriendship, &gDisableStructs[gBattlerAttacker], gMultiHitCounter);
+        MarkBattlerForControllerExec(gBattlerAttacker);
+    }
+    case VARIOUS_DEBUG_INIT_MOVE_ANIMATION:
+    {
+        gCurrentMove = MOVE_ROOST; // todo: make this a config
+        gBattlerAttacker = 0;
+        gBattlerTarget = 1;
+        break;
+    }
+    case VARIOUS_DEBUG_INCREMENT_MOVE_ANIMATION:
+    {
+        VARIOUS_ARGS(const u8 *keepParamsPtr, const u8 *resetParamsKeepMovePtr, const u8 *resetParamsResetMovePtr);
+
+        bool32 passedMoveWithMultipleAnimsCheck = FALSE;
+        bool32 tryIncrementMove = FALSE;
+        u32 determinedMoveTarget;
+
+        asm(".align 1, 0\nCmd_debugincrementmoveanimation:\n");
+
+        switch (gCurrentMove)
+        {
+        case MOVE_TRIPLE_KICK:
+            gBattleScripting.animTurn++;
+            if (gBattleScripting.animTurn >= 3) {
+                passedMoveWithMultipleAnimsCheck = TRUE;
+            }
+            break;
+        case MOVE_SPIT_UP:
+        case MOVE_SWALLOW:
+            gBattleScripting.animTurn++;
+            if (gBattleScripting.animTurn >= 4) {
+                passedMoveWithMultipleAnimsCheck = TRUE;
+            }
+            break;
+        // moves that all have 2 anims
+        // TODO: expansion almost certainly has more, but I don't know them
+        // these are just the ones I marked from the hack I'm working on
+        case MOVE_GEOMANCY:
+        case MOVE_TAIL_SLAP:
+        case MOVE_PHANTOM_FORCE:
+        case MOVE_SOLAR_BLADE:
+        case MOVE_PSYCHIC_FANGS:
+        case MOVE_DOUBLE_SLAP:
+        case MOVE_COMET_PUNCH:
+        case MOVE_BEAT_UP:
+        case MOVE_PURSUIT:
+        case MOVE_FURY_ATTACK:
+        case MOVE_DIG:
+        case MOVE_SKULL_BASH:
+        case MOVE_SKY_ATTACK:
+        case MOVE_BRICK_BREAK:
+        case MOVE_SOLAR_BEAM:
+        case MOVE_FLY:
+        case MOVE_BOUNCE:
+        case MOVE_BIDE:
+        case MOVE_RAZOR_WIND:
+        case MOVE_CURSE:
+        case MOVE_ARM_THRUST:
+        case MOVE_DIVE:
+        // new 
+        case MOVE_FREEZE_SHOCK:
+        case MOVE_ICE_BURN:
+        case MOVE_METEOR_BEAM:
+        case MOVE_ELECTRO_SHOT:
+            gBattleScripting.animTurn++;
+            if (gBattleScripting.animTurn == 2) {
+                passedMoveWithMultipleAnimsCheck = TRUE;
+            }
+            break;
+        case MOVE_ROLLOUT:
+        case MOVE_ICE_BALL:
+            if (gDisableStructs[gBattlerAttacker].rolloutTimer == 0) {
+                passedMoveWithMultipleAnimsCheck = TRUE;
+            } else {
+                gDisableStructs[gBattlerAttacker].rolloutTimer--;
+                gBattleMovePower += gMovesInfo[gCurrentMove].power;
+            }
+            break;
+        case MOVE_TERRAIN_PULSE:
+            switch (gFieldStatuses) {
+            case 0:
+                gFieldStatuses = STATUS_FIELD_ELECTRIC_TERRAIN;
+                break;
+            case STATUS_FIELD_ELECTRIC_TERRAIN:
+                gFieldStatuses = STATUS_FIELD_GRASSY_TERRAIN;
+                break;
+            case STATUS_FIELD_GRASSY_TERRAIN:
+                gFieldStatuses = STATUS_FIELD_MISTY_TERRAIN;
+                break;
+            case STATUS_FIELD_MISTY_TERRAIN:
+                gFieldStatuses = STATUS_FIELD_PSYCHIC_TERRAIN;
+                break;
+            case STATUS_FIELD_PSYCHIC_TERRAIN:
+                gFieldStatuses = 0;
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        case MOVE_MAGNITUDE:
+            switch (gBattleMovePower) {
+            case 10:
+                gBattleMovePower = 30;
+                break;
+            case 30:
+                gBattleMovePower = 50;
+                break;
+            case 50:
+                gBattleMovePower = 70;
+                break;
+            case 70:
+                gBattleMovePower = 90;
+                break;
+            case 90:
+                gBattleMovePower = 110;
+                break;
+            case 110:
+                gBattleMovePower = 150;
+                break;
+            case 150:
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        // TODO: needs to be adjusted depending on gen (certain gens have different max furyCutter counts)
+        case MOVE_FURY_CUTTER:
+            if (gDisableStructs[gBattlerAttacker].furyCutterCounter == 3) {
+                gDisableStructs[gBattlerAttacker].furyCutterCounter = 0;
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                
+            } else {
+                gDisableStructs[gBattlerAttacker].furyCutterCounter++;
+            }
+            break;
+        case MOVE_RETURN:
+            switch (gAnimFriendship)
+            {
+            case 0:
+                gAnimFriendship = 61;
+                break;
+            case 61:
+                gAnimFriendship = 92;
+                break;
+            case 92:
+                gAnimFriendship = 201;
+                break;
+            case 201:
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        case MOVE_SEISMIC_TOSS:
+            switch (gBattleStruct->moveDamage[0])
+            {
+            case 0:
+                gBattleStruct->moveDamage[0] = 33;
+                break;
+            case 33:
+                gBattleStruct->moveDamage[0] = 66;
+                break;
+            case 66:
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        case MOVE_WEATHER_BALL:
+            switch (gBattleWeather)
+            {
+            case 0:
+                gBattleWeather = B_WEATHER_SUN;
+                break;
+            case B_WEATHER_SUN:
+                gBattleWeather = B_WEATHER_RAIN_NORMAL;
+                break;
+            case B_WEATHER_RAIN_NORMAL:
+                gBattleWeather = B_WEATHER_SANDSTORM;
+                break;
+            case B_WEATHER_SANDSTORM:
+                gBattleWeather = B_WEATHER_HAIL;
+                break;
+            case B_WEATHER_HAIL:
+                gBattleWeather = 0;
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        case MOVE_PRESENT:
+            switch (gBattleStruct->moveDamage[0]) {
+            case 0:
+                gBattleStruct->moveDamage[0] = 1;
+                break;
+            case 1:
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        // apparently expansion uses a new anim now
+        //case MOVE_U_TURN:
+        //case MOVE_VOLT_SWITCH:
+        //    if (!gBattleStruct->debugForceUturnNoSwitchAnim) {
+        //        gBattleStruct->debugForceUturnNoSwitchAnim = TRUE;
+        //    } else {
+        //        gBattleStruct->debugForceUturnNoSwitchAnim = FALSE;
+        //        passedMoveWithMultipleAnimsCheck = TRUE;
+        //    }
+        //    break;
+        case MOVE_RAGE_FIST:
+            switch (gBattleMovePower)
+            {
+            case 50:
+                gBattleMovePower = 100;
+                break;
+            case 100:
+                gBattleMovePower = 150;
+                break;
+            case 150:
+                gBattleMovePower = 200;
+                break;
+            case 200:
+                gBattleMovePower = 250;
+                break;
+            case 250:
+                gBattleMovePower = 300;
+                break;
+            case 300:
+                gBattleMovePower = 350;
+                break;
+            case 350:
+                passedMoveWithMultipleAnimsCheck = TRUE;
+                break;
+            }
+            break;
+        default:
+            passedMoveWithMultipleAnimsCheck = TRUE;
+            break;
+        }
+
+        // set some new parameters which give a different animation, so return
+        if (!passedMoveWithMultipleAnimsCheck) {
+            gBattlescriptCurrInstr = cmd->keepParamsPtr;
+            return;
+        }
+
+        determinedMoveTarget = GetDeterminedMoveTarget(gCurrentMove);
+
+        //#if !DEBUG_MOVE_ANIMS_ONE_TARGET
+        switch (determinedMoveTarget)
+        {
+        case MOVE_TARGET_BOTH:
+        case MOVE_TARGET_OPPONENTS_FIELD:
+        case MOVE_TARGET_RANDOM:
+            gBattlerTarget += BIT_FLANK;
+            break;
+        case MOVE_TARGET_ALL_BATTLERS:
+        case MOVE_TARGET_USER:
+        case MOVE_TARGET_ALLY:
+            gBattlerTarget = gBattlersCount;
+            break;
+        case MOVE_TARGET_USER | MOVE_TARGET_ALLY:
+            gBattlerTarget += BIT_FLANK;
+            break;
+        default:
+        case MOVE_TARGET_SELECTED:
+            gBattlerTarget++;
+            if (gBattlerTarget == gBattlerAttacker) {
+                gBattlerTarget++;
+            }
+            break;
+        }
+        //#else
+        //gBattlerTarget = gBattlersCount;
+        //#endif
+
+        if (gBattlerTarget >= gBattlersCount) {
+            gBattlerAttacker++;
+            if (gBattlerAttacker >= gBattlersCount) {
+                gBattlerAttacker = 0;
+                gBattlerTarget = 1;
+                tryIncrementMove = TRUE;
+            } else {
+                switch (determinedMoveTarget)
+                {
+                case MOVE_TARGET_BOTH:
+                case MOVE_TARGET_OPPONENTS_FIELD:
+                    gBattlerTarget = (gBattlerAttacker & BIT_SIDE) ^ BIT_SIDE;
+                    break;
+                case MOVE_TARGET_USER | MOVE_TARGET_ALLY:
+                    gBattlerTarget = (gBattlerAttacker & ~BIT_FLANK);
+                    break;
+                case MOVE_TARGET_ALLY:
+                    gBattlerTarget = gBattlerAttacker ^ BIT_FLANK;
+                    break;
+                case MOVE_TARGET_USER:
+                case MOVE_TARGET_ALL_BATTLERS:
+                    gBattlerTarget = gBattlerAttacker;
+                    break;
+                default:
+                case MOVE_TARGET_SELECTED:
+                    gBattlerTarget = 0;
+                    break;
+                }
+            }
+        }
+
+        if (tryIncrementMove) {
+            asm("Cmd_debugincrmoveanim_inc:\n");
+            gCurrentMove++;
+            switch (gCurrentMove) {
+            case MOVE_ROAR:
+            case MOVE_WHIRLWIND:
+            case MOVE_VOLT_SWITCH:
+            case MOVE_TELEPORT:
+            case MOVE_TRANSFORM:
+            case MOVE_SUBSTITUTE:
+            case MOVE_BATON_PASS:
+            case MOVE_NATURE_POWER:
+            case MOVE_MIRROR_MOVE:
+            // TODO: more moves
+            // for now since moves the pokemon off screen
+                gCurrentMove++;
+                break;
+            }
+            // played through all moves
+            if (gCurrentMove == MOVES_COUNT) {
+                break;
+            }
+            gBattlescriptCurrInstr = cmd->resetParamsResetMovePtr;
+        } else {
+            gBattlescriptCurrInstr = cmd->resetParamsKeepMovePtr;
+        }
+        return;
+    }
+    case VARIOUS_DEBUG_SET_NEW_MOVE_ANIMATION_PARAMS:
+    {
+        // now need to set default param values for specific animations
+        // this code works both when the move is incremented vs when it isn't
+        asm("Cmd_debugsetnewmoveanimparams:\n");
+        gBattleScripting.animTurn = 0;
+        gBattleMovePower = gMovesInfo[gCurrentMove].power;
+        gBattleStruct->moveDamage[0] = 80;
+        gAnimFriendship = 0;
+        gBattleWeather = 0;
+        gFieldStatuses = 0;
+        gBattleStruct->debugForceUturnNoSwitchAnim = FALSE;
+
+        switch (gCurrentMove)
+        {
+        case MOVE_SPIT_UP:
+        case MOVE_SWALLOW:
+            gBattleScripting.animTurn = 1;
+            break;
+        case MOVE_ICE_BALL:
+        case MOVE_ROLLOUT:
+            gDisableStructs[gBattlerAttacker].rolloutTimerStartValue = 5;
+            gDisableStructs[gBattlerAttacker].rolloutTimer = 4;
+            break;
+        case MOVE_MAGNITUDE:
+            gBattleMovePower = 10;
+            break;
+        case MOVE_SEISMIC_TOSS:
+            gBattleStruct->moveDamage[0] = 0;
+            break;
+        case MOVE_PRESENT:
+            gBattleStruct->moveDamage[0] = 0;
+            break;
+        case MOVE_FURY_CUTTER:
+            gDisableStructs[gBattlerAttacker].furyCutterCounter = 1;
+            break;
+        }
+    }
+    case VARIOUS_DEBUG_INIT_MOVE_TARGET:
+    {
+        u32 determinedMoveTarget;
+        const u8 * moveTargetStr;
+
+        determinedMoveTarget = GetDeterminedMoveTarget(gCurrentMove);
+
+        switch (determinedMoveTarget)
+        {
+        case MOVE_TARGET_BOTH:
+        case MOVE_TARGET_OPPONENTS_FIELD:
+            gBattlerTarget = 1;
+            break;
+        case MOVE_TARGET_ALL_BATTLERS:
+        case MOVE_TARGET_USER:
+        case MOVE_TARGET_USER | MOVE_TARGET_ALLY:
+            gBattlerTarget = 0;
+            break;
+        case MOVE_TARGET_ALLY:
+            if (gBattlersCount == 2) {
+                gBattlerTarget = 1;
+            } else {
+                gBattlerTarget = 2;
+            }
+            break;            
+        default:
+        case MOVE_TARGET_SELECTED:
+            gBattlerTarget = 1;
+            break;
+        }
+
+        switch (determinedMoveTarget) {
+        case MOVE_TARGET_SELECTED:
+        case MOVE_TARGET_DEPENDS:
+        default:
+            if (gMovesInfo[gCurrentMove].target == MOVE_TARGET_FOES_AND_ALLY) {
+                moveTargetStr = gText_MoveTargetFoesAndAlly;
+            } else {
+                moveTargetStr = gText_MoveTargetSelected;
+            }
+            break;
+        case MOVE_TARGET_RANDOM:
+            moveTargetStr = gText_MoveTargetRandom;
+            break;
+        case MOVE_TARGET_BOTH:
+            if (gMovesInfo[gCurrentMove].target == MOVE_TARGET_OPPONENT) {
+                moveTargetStr = gText_MoveTargetOpponent;
+            } else {
+                moveTargetStr = gText_MoveTargetBoth;
+            }
+            break;
+        case MOVE_TARGET_USER:
+            moveTargetStr = gText_MoveTargetUser;
+            break;
+        case MOVE_TARGET_OPPONENTS_FIELD:
+            moveTargetStr = gText_MoveTargetOpponentsField;
+            break;
+        case MOVE_TARGET_ALLY:
+            moveTargetStr = gText_MoveTargetAlly;
+            break;
+        case MOVE_TARGET_ALL_BATTLERS:
+            moveTargetStr = gText_MoveTargetEveryone;
+            break;
+        case MOVE_TARGET_USER | MOVE_TARGET_ALLY:
+            moveTargetStr = gText_MoveTargetUserOrAlly;
+            break;
+        }
+
+        StringCopy(gStringVar3, moveTargetStr);
     }
     } // End of switch (cmd->id)
 

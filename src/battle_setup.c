@@ -261,7 +261,11 @@ static void CreateBattleStartTask(u8 transition, u16 song)
     u8 taskId = CreateTask(Task_BattleStart, 1);
 
     gTasks[taskId].tTransition = transition;
-    PlayMapChosenOrBattleBGM(song);
+    if (gDoDebugPlayAllMoveAnims) {
+        StopMapMusic();
+    } else {
+        PlayMapChosenOrBattleBGM(song);
+    }
 }
 
 static void Task_BattleStart_Debug(u8 taskId)
@@ -1157,7 +1161,7 @@ void ClearTrainerFlag(u16 trainerId)
     FlagClear(TRAINER_FLAGS_START + trainerId);
 }
 
-void BattleSetup_StartTrainerBattle(void)
+void BattleSetup_StartTrainerBattle(bool32 fromDebug)
 {
     if (gNoOfApproachingTrainers == 2)
         gBattleTypeFlags = (BATTLE_TYPE_DOUBLE | BATTLE_TYPE_TWO_OPPONENTS | BATTLE_TYPE_TRAINER);
@@ -1209,7 +1213,9 @@ void BattleSetup_StartTrainerBattle(void)
     else
         DoTrainerBattle();
 
-    ScriptContext_Stop();
+    if (!fromDebug) {
+        ScriptContext_Stop();
+    }
 }
 
 void BattleSetup_StartTrainerBattle_Debug(void)

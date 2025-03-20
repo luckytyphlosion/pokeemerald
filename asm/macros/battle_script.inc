@@ -2585,3 +2585,26 @@
 	printstring STRINGID_EMPTYSTRING3
 	waitmessage 1
 	.endm
+
+	.macro debugplaymoveanimation 
+	various BS_ATTACKER, VARIOUS_DEBUG_PLAY_MOVE_ANIMATION
+	.endm
+
+	.macro debuginitmoveanimation
+	various BS_ATTACKER, VARIOUS_DEBUG_INIT_MOVE_ANIMATION
+	.endm
+
+	.macro debugincrementmoveanimation ptr:req, ptr2:req, ptr3:req
+	various BS_ATTACKER, VARIOUS_DEBUG_INCREMENT_MOVE_ANIMATION
+	.4byte \ptr // keep params
+	.4byte \ptr2 // reset params keep move
+	.4byte \ptr3 // reset params reset move
+	.endm
+
+	.macro debugsetnewmoveanimationparams
+	various BS_ATTACKER, VARIOUS_DEBUG_SET_NEW_MOVE_ANIMATION_PARAMS
+	.endm
+
+	.macro debuginitmovetarget
+	various BS_ATTACKER, VARIOUS_DEBUG_INIT_MOVE_TARGET
+	.endm

@@ -893,7 +893,19 @@ const u8 *const gBattleStringsTable[BATTLESTRINGS_COUNT] =
     [STRINGID_ITDOESNTAFFECTTWOFOES]                = COMPOUND_STRING("It doesn't affect {B_DEF_NAME_WITH_PREFIX2} and {B_DEF_PARTNER_NAME}…"),
     [STRINGID_SENDCAUGHTMONPARTYORBOX]              = COMPOUND_STRING("Add {B_DEF_NAME} to your party?"),
     [STRINGID_PKMNSENTTOPCAFTERCATCH]               = gText_PkmnSentToPCAfterCatch,
+    [STRINGID_DEBUGUSEDMOVE] = COMPOUND_STRING("{B_ATK_NAME_WITH_PREFIX} used {B_CURRENT_MOVE}\nagainst {B_DEF_NAME_WITH_PREFIX}! ({B_COPY_VAR_3})"),
 };
+
+const u8 gText_MoveTargetFoesAndAlly[] = _("Foes & Ally");
+const u8 gText_MoveTargetSelected[] = _("Selected");
+const u8 gText_MoveTargetRandom[] = _("Random");
+const u8 gText_MoveTargetOpponent[] = _("One foe");
+const u8 gText_MoveTargetBoth[] = _("Both foes");
+const u8 gText_MoveTargetUser[] = _("User");
+const u8 gText_MoveTargetOpponentsField[] = _("Foe's field");
+const u8 gText_MoveTargetAlly[] = _("Ally");
+const u8 gText_MoveTargetEveryone[] = _("All 4");
+const u8 gText_MoveTargetUserOrAlly[] = _("User or ally");
 
 const u16 gTrainerUsedItemStringIds[] =
 {

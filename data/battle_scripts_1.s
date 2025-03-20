@@ -10068,3 +10068,24 @@ BattleScript_SleepClausePreventsEnd::
 	printstring STRINGID_BLOCKEDBYSLEEPCLAUSE
 	waitmessage B_WAIT_TIME_LONG
 	end2
+
+
+BattleScript_TestAllMoveAnimations::
+	pause 0x1f
+	debuginitmoveanimation
+BattleScript_TestAllMoveAnimations_resetParamsNewMove:
+	debuginitmovetarget
+BattleScript_TestAllMoveAnimations_resetParamsSameMove:
+	debugsetnewmoveanimationparams
+BattleScript_TestAllMoveAnimations_keepParamsLoop:
+	bicword gHitMarker, HITMARKER_NO_ATTACKSTRING | HITMARKER_ATTACKSTRING_PRINTED
+	printstring STRINGID_DEBUGUSEDMOVE
+	debugplaymoveanimation
+	waitanimation
+	debugincrementmoveanimation BattleScript_TestAllMoveAnimations_keepParams, BattleScript_TestAllMoveAnimations_resetParamsSameMove, BattleScript_TestAllMoveAnimations_resetParamsNewMove
+	setbyte gBattleOutcome, B_OUTCOME_PLAYER_TELEPORTED
+	end
+BattleScript_TestAllMoveAnimations_keepParams:
+	printstring STRINGID_EMPTYSTRING3
+	waitmessage 0xf
+	goto BattleScript_TestAllMoveAnimations_keepParamsLoop

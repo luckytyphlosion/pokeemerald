@@ -11671,8 +11671,9 @@ static void Cmd_various(void)
     }
     case VARIOUS_DEBUG_PLAY_MOVE_ANIMATION:
     {
-        BtlController_EmitMoveAnimation(0, BUFFER_A, gCurrentMove, gBattleScripting.animTurn, gBattleMovePower, gBattleStruct->moveDamage[0], gAnimFriendship, &gDisableStructs[gBattlerAttacker], gMultiHitCounter);
+        BtlController_EmitMoveAnimation(gBattlerAttacker, BUFFER_A, gCurrentMove, gBattleScripting.animTurn, gBattleMovePower, gBattleStruct->moveDamage[0], gAnimFriendship, &gDisableStructs[gBattlerAttacker], gMultiHitCounter);
         MarkBattlerForControllerExec(gBattlerAttacker);
+        break;
     }
     case VARIOUS_DEBUG_INIT_MOVE_ANIMATION:
     {
@@ -12040,6 +12041,7 @@ static void Cmd_various(void)
             gDisableStructs[gBattlerAttacker].furyCutterCounter = 1;
             break;
         }
+        break;
     }
     case VARIOUS_DEBUG_INIT_MOVE_TARGET:
     {
@@ -12110,6 +12112,7 @@ static void Cmd_various(void)
         }
 
         StringCopy(gStringVar3, moveTargetStr);
+        break;
     }
     } // End of switch (cmd->id)
 

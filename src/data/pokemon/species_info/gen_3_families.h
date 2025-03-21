@@ -931,7 +931,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .abilities = { ABILITY_RUN_AWAY, ABILITY_NONE, ABILITY_RATTLED },
     #endif
         .bodyColor = BODY_COLOR_GRAY,
-        .speciesName = _("Poochyena"),
+        .speciesName = _("3"),
         .cryId = CRY_POOCHYENA,
         .natDexNum = NATIONAL_DEX_POOCHYENA,
         .categoryName = _("Bite"),

@@ -11714,6 +11714,7 @@ static void Cmd_various(void)
         // these are just the ones I marked from the hack I'm working on
         case MOVE_GEOMANCY:
         case MOVE_TAIL_SLAP:
+        case MOVE_SHADOW_FORCE:
         case MOVE_PHANTOM_FORCE:
         case MOVE_SOLAR_BLADE:
         case MOVE_PSYCHIC_FANGS:
@@ -11739,6 +11740,7 @@ static void Cmd_various(void)
         case MOVE_ICE_BURN:
         case MOVE_METEOR_BEAM:
         case MOVE_ELECTRO_SHOT:
+        case MOVE_SKY_DROP:
             gBattleScripting.animTurn++;
             if (gBattleScripting.animTurn == 2) {
                 passedMoveWithMultipleAnimsCheck = TRUE;
@@ -11982,17 +11984,31 @@ static void Cmd_various(void)
             asm("Cmd_debugincrmoveanim_inc:\n");
             gCurrentMove++;
             switch (gCurrentMove) {
+            // for now since moves the pokemon off screen
             case MOVE_ROAR:
             case MOVE_WHIRLWIND:
-            case MOVE_VOLT_SWITCH:
+            //case MOVE_VOLT_SWITCH:
             case MOVE_TELEPORT:
             case MOVE_TRANSFORM:
             case MOVE_SUBSTITUTE:
             case MOVE_BATON_PASS:
             case MOVE_NATURE_POWER:
             case MOVE_MIRROR_MOVE:
+            // spawns a substitute which is annoying
+            case MOVE_SHED_TAIL:
             // TODO: more moves
-            // for now since moves the pokemon off screen
+            case MOVE_MAGMA_STORM:
+            // magma storm is broken, the fix from lucky wasn't fully ported, and in its current state it just doesn't work
+            // these moves just crash
+            case MOVE_LIGHT_OF_RUIN:
+            case MOVE_FLEUR_CANNON:
+            case MOVE_MOONGEIST_BEAM:
+            case MOVE_DYNAMAX_CANNON:
+            case MOVE_ETERNABEAM:
+            // seems to crash specifically in doubles mode, when doing all possible attacker-target combinations
+            case MOVE_JET_PUNCH:
+            // seems to crash for some reason, but only if all move anims are played?
+            case MOVE_MALIGNANT_CHAIN:
                 gCurrentMove++;
                 break;
             }

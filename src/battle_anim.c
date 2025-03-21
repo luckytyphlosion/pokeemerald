@@ -29,7 +29,7 @@
     battle_anim_script.inc and used in battle_anim_scripts.s
 */
 
-#define ANIM_SPRITE_INDEX_COUNT 8
+#define ANIM_SPRITE_INDEX_COUNT 9
 
 static void Cmd_loadspritegfx(void);
 static void Cmd_unloadspritegfx(void);

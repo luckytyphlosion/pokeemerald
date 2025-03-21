@@ -14640,6 +14640,7 @@ gBattleAnimMove_Poltergeist::
 	playsewithpan SE_M_SAND_ATTACK, SOUND_PAN_TARGET
 	createvisualtask AnimTask_PoltergeistItem, 2
 	waitforvisualfinish
+	unloadspritegfx ANIM_TAG_ITEM_BAG // generated in AnimTask_PoltergeistItem
 	setalpha 12, 8
 	createsprite gBasicHitSplatSpriteTemplate, ANIM_ATTACKER, 2, 0x0, 0x0, 0x1, 0x1
 	createvisualtask AnimTask_ShakeMon, 5, ANIM_TARGET, 0, 5, 5, 1

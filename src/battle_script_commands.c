@@ -2467,8 +2467,10 @@ static void Cmd_waitanimation(void)
 {
     CMD_ARGS();
 
-    if (gBattleControllerExecFlags == 0)
+    if (gBattleControllerExecFlags == 0) {
+        asm("Cmd_waitanimation_done:\n\t.thumb\n\t.align 1, 0\n\tnop\n");
         gBattlescriptCurrInstr = cmd->nextInstr;
+    }
 }
 
 static void DoublesHPBarReduction(void)

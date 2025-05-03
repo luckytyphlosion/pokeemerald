@@ -206,7 +206,7 @@ static void Anim_ShakeGlowBlue_Slow(struct Sprite *sprite);
 
 static void WaitAnimEnd(struct Sprite *sprite);
 
-static struct PokemonAnimData sAnims[MAX_BATTLERS_COUNT];
+EWRAM_DATA static struct PokemonAnimData sAnims[MAX_BATTLERS_COUNT] = {0};
 static u8 sAnimIdx;
 static bool32 sIsSummaryAnim;
 

@@ -781,6 +781,12 @@ static void Task_TitleScreenPhase3(u8 taskId)
 {
     if (JOY_NEW(A_BUTTON) || JOY_NEW(START_BUTTON))
     {
+        u32 num = 69;
+        CrashScreen(0, "ABCDEFGHIJKLMNOPQRSTUVWXYZ():.\n"
+            "/,-'0123456789\n"
+            "PADDING TEST: %03d\n"
+            "I CAN BE CALLED AT ANY TIME.\n"
+            "ISN'T THAT COOL.", num);
         FadeOutBGM(4);
         BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_WHITEALPHA);
         SetMainCallback2(CB2_GoToMainMenu);

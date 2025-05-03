@@ -23,8 +23,8 @@ enum {
 extern const u8 *gRamScriptRetAddr;
 
 static u8 sGlobalScriptContextStatus;
-static struct ScriptContext sGlobalScriptContext;
-static struct ScriptContext sImmediateScriptContext;
+COMMON_DATA struct ScriptContext sGlobalScriptContext = {0};
+COMMON_DATA struct ScriptContext sImmediateScriptContext = {0};
 static bool8 sLockFieldControls;
 
 extern ScrCmdFunc gScriptCmdTable[];

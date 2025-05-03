@@ -62,7 +62,7 @@ static void HandleLongGrassOnHyper(u8, s16, s16);
 static u8 sCutSquareSide;
 static u8 sTileCountFromPlayer_X;
 static u8 sTileCountFromPlayer_Y;
-static bool8 sHyperCutTiles[CUT_HYPER_AREA];
+static EWRAM_DATA bool8 sHyperCutTiles[CUT_HYPER_AREA] = {0};
 
 // EWRAM variables
 static EWRAM_DATA u8 *sCutGrassSpriteArrayPtr = NULL;

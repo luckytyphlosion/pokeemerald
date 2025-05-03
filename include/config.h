@@ -55,4 +55,6 @@
 #endif
 #endif
 
+#define ROM_VERSION 0
+
 #endif // GUARD_CONFIG_H

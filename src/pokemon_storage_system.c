@@ -557,7 +557,7 @@ struct PokemonStorageSystemData
     u8 displayMenuTilemapBuffer[0x800];
 };
 
-static u32 sItemIconGfxBuffer[98];
+EWRAM_DATA static u32 sItemIconGfxBuffer[98] = {0};
 
 EWRAM_DATA static u8 sPreviousBoxOption = 0;
 EWRAM_DATA static struct ChooseBoxMenu *sChooseBoxMenu = NULL;
@@ -575,6 +575,8 @@ EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
 EWRAM_DATA static bool8 sAutoActionOn = 0;
+EWRAM_DATA static u16 sBadEggScanCursor = 0;
+EWRAM_DATA static u8 sBadEggPartyScanCursor = 0;
 
 // Main tasks
 static void EnterPokeStorage(u8);
@@ -10056,4 +10058,186 @@ static void UnkUtil_DmaRun(struct UnkUtilData *data)
         Dma3FillLarge16_(0, data->dest, data->size);
         data->dest += 64;
     }
+}
+
+
+extern u64 DivMod30(u32 num);
+
+static const char sCrashText_BadEggScanDetected[] = "ERROR: DETECTED BAD EGG AT\n"
+    "BOX %d POS %d.\n"
+    "IMMEDIATELY WRITE DOWN WHAT\n"
+    "YOU DID IN THE LAST MINUTE TO\n"
+    "HELP DEBUG THIS CORRUPTION.\n"
+    "IF YOU CAN, MAKE A SAVESTATE\n"
+    "IMMEDIATELY FOR US TO DEBUG.\n"
+    "ALSO, PLEASE RELEASE THE BAD\n"
+    "EGG ASAP SO THAT FURTHER\n"
+    "CORRUPTION CAN BE DETECTED.\n"
+    "PLEASE SCREENCAP THE FOLLOWING\n"
+    "DEBUG INFO (PRESS SELECT TO\n"
+    "ADVANCE).";
+
+static const char sCrashText_BadEggScanPartyDetected[] = "ERROR: DETECTED BAD EGG AT\n"
+    "PARTY POS %d\n"
+    "IMMEDIATELY WRITE DOWN WHAT\n"
+    "YOU DID IN THE LAST MINUTE TO\n"
+    "HELP DEBUG THIS CORRUPTION.\n"
+    "IF YOU CAN, MAKE A SAVESTATE\n"
+    "IMMEDIATELY FOR US TO DEBUG.\n"
+    "CONTACT THE DEVS TO HELP\n"
+    "REPAIR THE CORRUPTION.\n"
+    "PLEASE SCREENCAP THE FOLLOWING\n"
+    "DEBUG INFO (PRESS SELECT TO\n"
+    "ADVANCE).";
+
+#define DECRYPT_AND_CHECKSUM_PART(rawValue, key) ({ \
+    u32 decryptedRawPart; \
+    decryptedRawPart = rawValue ^ key; \
+    (decryptedRawPart & 0xffff) + (decryptedRawPart >> 16); \
+})
+
+static inline void ScanForBadEggsInStorage_Iteration(struct BoxPokemon * boxesCur, struct BoxPokemon * boxesStart, bool32 isBox)
+{
+    if (!boxesCur->isBadEggFromScan) {
+        u32 * raw;
+        u32 cursor;
+        u64 boxNumPos;
+        u32 boxNum;
+        u32 boxPos;
+
+        raw = boxesCur->secure.raw;
+
+        if (boxesCur->language != 0) {
+            // ~267 cycles to scan non-empty mon
+            u32 actualChecksum;
+            u32 key;
+            u32 decryptedRawPart;
+
+            key = boxesCur->otId ^ boxesCur->personality;
+
+            actualChecksum = DECRYPT_AND_CHECKSUM_PART(raw[0], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[1], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[2], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[3], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[4], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[5], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[6], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[7], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[8], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[9], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[10], key);
+            actualChecksum += DECRYPT_AND_CHECKSUM_PART(raw[11], key);
+
+            if ((u16)actualChecksum != boxesCur->checksum) {
+                goto label_checksum_failed;
+            }
+        } else {
+            // ~120 cycles to scan empty mon
+            u32 rawCombined;
+
+            rawCombined = raw[0] | raw[1];
+            rawCombined |= raw[2];
+            rawCombined |= raw[3];
+            rawCombined |= raw[4];
+            rawCombined |= raw[5];
+            rawCombined |= raw[6];
+            rawCombined |= raw[7];
+            rawCombined |= raw[8];
+            rawCombined |= raw[9];
+            rawCombined |= raw[10];
+            rawCombined |= raw[11];
+
+            if (rawCombined != 0) {
+label_checksum_failed:
+                boxesCur->isBadEggFromScan = TRUE;
+                if (isBox) {
+                    cursor = boxesCur - boxesStart;
+                    boxNumPos = DivMod30(cursor);
+                    boxNum = ((u32)boxNumPos) + 1;
+                    boxPos = (u32)(boxNumPos >> 32) + 1;
+    
+                    CrashScreen(CRASH_BAD_EGG_SCAN, sCrashText_BadEggScanDetected, boxNum, boxPos);
+                } else {
+                    u32 partyPos;
+
+                    partyPos = ((struct Pokemon *)boxesCur - (struct Pokemon *)boxesStart) + 1;
+                    CrashScreen(CRASH_BAD_EGG_SCAN, sCrashText_BadEggScanPartyDetected, partyPos);
+                }
+            }
+        }
+    }
+}
+
+// return true if vblank occurred
+bool32 ScanForBadEggsInPartyAndStorage(void)
+{
+    struct BoxPokemon * boxesStart;
+    struct BoxPokemon * boxesEnd;
+    struct BoxPokemon * boxesCur;
+    struct BoxPokemon * boxesCursorStart;
+    struct Pokemon * partyCur;
+    struct Pokemon * partyStart;
+    struct Pokemon * partyEnd;
+
+    if (gPokemonStoragePtr == NULL) {
+        return gVBlankOccurred;
+    }
+
+    partyStart = gPlayerParty;
+    partyCur = &partyStart[sBadEggPartyScanCursor];
+    partyEnd = &partyStart[PARTY_SIZE];
+
+    do {
+        if (gVBlankOccurred) {
+            sBadEggPartyScanCursor = partyCur - partyStart;
+            return TRUE;
+        }
+        ScanForBadEggsInStorage_Iteration(&partyCur->box, &partyStart->box, FALSE);
+    } while (++partyCur < partyEnd);
+
+    boxesStart = &gPokemonStoragePtr->boxes[0][0];
+    boxesEnd = &gPokemonStoragePtr->boxes[TOTAL_BOXES_COUNT][0];
+    // more undefined behaviour yay
+    // specifically, treating a 2d array as a single continuous 1d-array
+    // unfortunately, iterating this as a 2d array imposes a significant performance penalty
+    // modern should modify the boxes struct to be the following
+    /*
+    struct PokemonStorage
+    {
+        u8 currentBox;
+        union {
+            struct BoxPokemon boxes[TOTAL_BOXES_COUNT][IN_BOX_COUNT];
+            struct BoxPokemon boxes1d[TOTAL_BOXES_COUNT * IN_BOX_COUNT];
+        };
+        u8 boxNames[TOTAL_BOXES_COUNT][BOX_NAME_LENGTH + 1];
+        u8 boxWallpapers[TOTAL_BOXES_COUNT];
+    };
+    // and then should read from boxes1d (and remove the cast)
+    */
+
+    boxesCursorStart = &((struct BoxPokemon *)gPokemonStoragePtr->boxes)[sBadEggScanCursor];
+    boxesCur = boxesCursorStart;
+
+    do {
+        if (gVBlankOccurred) {
+            sBadEggScanCursor = boxesCur - boxesStart;
+            return TRUE;
+        }
+        ScanForBadEggsInStorage_Iteration(boxesCur, boxesStart, TRUE);
+    } while (++boxesCur < boxesEnd);
+
+    boxesCur = boxesStart;
+
+    while (boxesCur < boxesCursorStart) {
+        if (gVBlankOccurred) {
+            sBadEggScanCursor = boxesCur - boxesStart;
+            return TRUE;
+        }
+
+        ScanForBadEggsInStorage_Iteration(boxesCur, boxesStart, TRUE);
+
+        boxesCur++;
+    }
+
+    return FALSE;
 }

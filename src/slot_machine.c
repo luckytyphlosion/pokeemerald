@@ -676,7 +676,7 @@ static EWRAM_DATA struct SpriteSheet *sSlotMachineSpritesheetsPtr = NULL;
 static EWRAM_DATA struct SlotMachine *sSlotMachine = NULL;
 
 // IWRAM bss
-static struct SpriteFrameImage *sImageTables_DigitalDisplay[NUM_DIG_DISPLAY_SPRITES];
+static EWRAM_DATA struct SpriteFrameImage *sImageTables_DigitalDisplay[NUM_DIG_DISPLAY_SPRITES] = {0};
 
 // Const rom data.
 static const struct DigitalDisplaySprite *const sDigitalDisplayScenes[];

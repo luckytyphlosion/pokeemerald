@@ -16,6 +16,7 @@
 	.include "overworld.o"
 	.include "fieldmap.o"
 	.include "field_camera.o"
+	.include "script.o"
 	.include "field_control_avatar.o"
 	.include "start_menu.o"
 	.include "sound.o"

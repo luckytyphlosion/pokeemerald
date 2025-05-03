@@ -297,6 +297,8 @@ $(FONTGFXDIR)/frlg_male.fwjpnfont: $(FONTGFXDIR)/japanese_frlg_male.png
 $(FONTGFXDIR)/frlg_female.fwjpnfont: $(FONTGFXDIR)/japanese_frlg_female.png
 	$(GFX) $< $@
 
+$(FONTGFXDIR)/crash_screen_font.4bpp: %.4bpp: %.png
+	$(GFX) $< $@ -num_tiles 45
 
 ### Miscellaneous ###
 

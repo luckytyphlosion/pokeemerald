@@ -66,7 +66,7 @@ enum {
 COMMON_DATA s8 sCurTVShowSlot = 0;
 COMMON_DATA u16 sTV_SecretBaseVisitMovesTemp[8] = {0};
 COMMON_DATA u8 sTV_DecorationsBuffer[DECOR_MAX_SECRET_BASE] = {0};
-COMMON_DATA struct {
+EWRAM_DATA struct {
     u8 level;
     u16 species;
     u16 move;

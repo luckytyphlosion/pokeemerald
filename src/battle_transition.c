@@ -291,7 +291,7 @@ static bool8 MugshotTrainerPic_SlideOffscreen(struct Sprite *);
 static s16 sDebug_RectangularSpiralData;
 static u8 sTestingTransitionId;
 static u8 sTestingTransitionState;
-static struct RectangularSpiralLine sRectangularSpiralLines[4];
+EWRAM_DATA static struct RectangularSpiralLine sRectangularSpiralLines[4];
 
 EWRAM_DATA static struct TransitionData *sTransitionData = NULL;
 

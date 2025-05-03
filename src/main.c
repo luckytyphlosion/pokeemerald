@@ -23,6 +23,7 @@
 #include "intro.h"
 #include "main.h"
 #include "trainer_hill.h"
+#include "pokemon_storage_system.h"
 #include "constants/rgb.h"
 
 static void VBlankIntr(void);
@@ -68,6 +69,7 @@ COMMON_DATA IntrFunc gIntrTable[INTR_COUNT] = {0};
 COMMON_DATA u8 gLinkVSyncDisabled = 0;
 COMMON_DATA u32 IntrMain_Buffer[0x200] = {0};
 COMMON_DATA s8 gPcmDmaCounter = 0;
+COMMON_DATA vbool8 gVBlankOccurred = 0;
 
 static EWRAM_DATA u16 sTrainerId = 0;
 
@@ -164,7 +166,10 @@ void AgbMain()
 
         PlayTimeCounter_Update();
         MapMusicMain();
-        WaitForVBlank();
+        gVBlankOccurred = FALSE;
+        if (!ScanForBadEggsInPartyAndStorage()) {
+            WaitForVBlank();
+        }
     }
 }
 
@@ -366,6 +371,8 @@ static void VBlankIntr(void)
         Random();
 
     UpdateWirelessStatusIndicatorSprite();
+
+    gVBlankOccurred = TRUE;
 
     INTR_CHECK |= INTR_FLAG_VBLANK;
     gMain.intrCheck |= INTR_FLAG_VBLANK;

@@ -151,6 +151,9 @@
 // It looks like file.c:line: size of array `id' is negative
 #define STATIC_ASSERT(expr, id) typedef char id[(expr) ? 1 : -1];
 
+// included globally for ease of use
+#include "crash_screen.h"
+
 struct Coords8
 {
     s8 x;

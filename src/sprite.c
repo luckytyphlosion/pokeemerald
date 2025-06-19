@@ -276,6 +276,28 @@ EWRAM_DATA s16 gSpriteCoordOffsetY = 0;
 EWRAM_DATA struct OamMatrix gOamMatrices[OAM_MATRIX_COUNT] = {0};
 EWRAM_DATA bool8 gAffineAnimsDisabled = FALSE;
 
+#define COMPRESSED_SPRITE_FRAME_DIMS_16x16 0
+#define COMPRESSED_SPRITE_FRAME_DIMS_16x32 1
+#define COMPRESSED_SPRITE_FRAME_DIMS_32x32 2
+#define COMPRESSED_SPRITE_FRAME_DIMS_64x64 3
+
+
+const u16 sCompressedSpriteFrameDimsToSize[] = {
+    [COMPRESSED_SPRITE_FRAME_DIMS_16x16] = 2 * 2 * 0x20,
+    [COMPRESSED_SPRITE_FRAME_DIMS_16x32] = 2 * 4 * 0x20,
+    [COMPRESSED_SPRITE_FRAME_DIMS_32x32] = 4 * 4 * 0x20,
+    [COMPRESSED_SPRITE_FRAME_DIMS_64x64] = 8 * 8 * 0x20,
+};
+
+static inline u32 ReadSpriteImagesSize(struct Sprite * sprite)
+{
+    if (sprite->images->size < 0xff00) {
+        return sprite->images->size;
+    } else {
+        return sCompressedSpriteFrameDimsToSize[(*((const u8 **)sprite->images))[2]];
+    }
+}
+
 void ResetSpriteData(void)
 {
     ResetOamRange(0, 128);
@@ -498,7 +520,7 @@ u32 CreateSpriteAt(u32 index, const struct SpriteTemplate *template, s16 x, s16 
     {
         s16 tileNum;
         sprite->images = template->images;
-        tileNum = AllocSpriteTiles((u8)(sprite->images->size / TILE_SIZE_4BPP));
+        tileNum = AllocSpriteTiles((u8)(ReadSpriteImagesSize(sprite) / TILE_SIZE_4BPP));
         if (tileNum == -1)
         {
             ResetSprite(sprite);
@@ -557,7 +579,7 @@ void DestroySprite(struct Sprite *sprite)
         if (!sprite->usingSheet)
         {
             u16 i;
-            u16 tileEnd = (sprite->images->size / TILE_SIZE_4BPP) + sprite->oam.tileNum;
+            u16 tileEnd = (ReadSpriteImagesSize(sprite) / TILE_SIZE_4BPP) + sprite->oam.tileNum;
             for (i = sprite->oam.tileNum; i < tileEnd; i++)
                 FREE_SPRITE_TILE(i);
         }
@@ -717,15 +739,37 @@ void SpriteCallbackDummy(struct Sprite *sprite)
 {
 }
 
+extern void DecompressSpriteFrameImage(const u8 * src, u8 * dest, u32 frameNum);
+
+const u32 sSpriteFrameDecompFuncSize = 624;
+
 void ProcessSpriteCopyRequests(void)
 {
+    // TODO: don't use hardcoded offset
+    u32 spriteFrameDecompressFuncBuffer[sSpriteFrameDecompFuncSize / 4];
+    void (*spriteFrameDecompressFunc)(const u8 * src, u8 * dest, u32 frameNum) = NULL;
+
     if (sShouldProcessSpriteCopyRequests)
     {
         u8 i = 0;
 
         while (sSpriteCopyRequestCount > 0)
         {
-            CpuCopy16(sSpriteCopyRequests[i].src, sSpriteCopyRequests[i].dest, sSpriteCopyRequests[i].size);
+            const u8 * src = sSpriteCopyRequests[i].src;
+            u8 * dest = sSpriteCopyRequests[i].dest;
+            u32 size = sSpriteCopyRequests[i].size;
+            if (size < 0xff00) {
+                DmaCopy32(3, src, dest, size);
+            } else {
+                if (spriteFrameDecompressFunc == NULL) {
+                    spriteFrameDecompressFunc = (void *)spriteFrameDecompressFuncBuffer;
+
+                    DmaCopy32(3, (uintptr_t)DecompressSpriteFrameImage, spriteFrameDecompressFuncBuffer, sSpriteFrameDecompFuncSize);
+                }
+
+                spriteFrameDecompressFunc(src, dest, size & 0xff);
+            }
+
             sSpriteCopyRequestCount--;
             i++;
         }

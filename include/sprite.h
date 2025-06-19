@@ -34,6 +34,7 @@ struct SpriteFrameImage
 
 #define overworld_frame(ptr, width, height, frame) {.data = (u8 *)ptr + (width * height * frame * 64)/2, .size = (width * height * 64)/2}
 #define overworld_ascending_frames(ptr, width, height) {.data = (u8 *)ptr, .size = (width * height * 64)/2, .relativeFrames=TRUE}
+#define overworld_frame_c(ptr, width, height, frame) {.data = (u8 *)ptr, .size = (0xff00 | frame)}
 
 struct SpritePalette
 {
